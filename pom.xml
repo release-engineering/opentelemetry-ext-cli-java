@@ -94,7 +94,7 @@
           <version>2.22.1</version>
           <executions>
             <execution>
-              <id>traceparent</id>
+              <id>default-test</id>
               <configuration>
                 <environmentVariables>
                   <!-- See https://www.w3.org/TR/trace-context/#relationship-between-the-headers -->

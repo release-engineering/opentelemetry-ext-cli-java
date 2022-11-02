@@ -87,15 +87,9 @@ public class EnvarExtractingPropagator
     @Override
     public <C> Context extract( Context context, C carrier, TextMapGetter<C> getter )
     {
-        System.out.println("\n\n\n\nEXTRACT\n\n\n");
-
         if ( context == null )
         {
-            return Context.root();
-        }
-        if ( getter == null )
-        {
-            return context;
+            context = Context.root();
         }
 
         SpanContext spanContext = extractImpl();
@@ -113,20 +107,20 @@ public class EnvarExtractingPropagator
 
         Map<String, String> envMap = System.getenv();
 
-        System.out.println("\n\n\n\nENVARS: " + envMap + "\n\n\n");
-
         SpanContext contextFromParent = null;
 
-        String traceParent = envMap.get( ENVAR_TRACE_PARENT );
-        if ( traceParent != null )
+        String traceParentValue = envMap.get( ENVAR_TRACE_PARENT );
+//        System.out.println("Trace parent: " + traceParentValue);
+        if ( traceParentValue != null )
         {
-            contextFromParent = extractContextFromTraceParent( traceParent );
+            contextFromParent = extractContextFromTraceParent( traceParentValue );
         }
 
         if ( contextFromParent == null )
         {
             String traceId = envMap.get( ENVAR_TRACE_ID );
             String parentSpanId = envMap.get( ENVAR_SPAN_ID );
+//            System.out.println("Trace ID: " + traceId + ", Span ID: " + parentSpanId);
             if ( traceId != null && !traceId.isEmpty() && parentSpanId != null && !parentSpanId.isEmpty() )
             {
                 contextFromParent = SpanContext.createFromRemoteParent( traceId, parentSpanId, TraceFlags.getDefault(),
@@ -143,15 +137,16 @@ public class EnvarExtractingPropagator
             return contextFromParent;
         }
 
-        String traceStateHeader = envMap.get( ENVAR_TRACE_STATE );
-        if ( traceStateHeader == null || traceStateHeader.isEmpty() )
+        String traceStateValue = envMap.get( ENVAR_TRACE_STATE );
+//        System.out.println("Trace state: " + traceStateValue);
+        if ( traceStateValue == null || traceStateValue.isEmpty() )
         {
             return contextFromParent;
         }
 
         try
         {
-            TraceState traceState = extractTraceState( traceStateHeader );
+            TraceState traceState = extractTraceState( traceStateValue );
             return SpanContext.createFromRemoteParent( contextFromParent.getTraceId(), contextFromParent.getSpanId(),
                                                        contextFromParent.getTraceFlags(), traceState );
         }

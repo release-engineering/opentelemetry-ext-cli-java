@@ -32,6 +32,18 @@
     <otel.version>1.19.0</otel.version>
   </properties>
 
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.quarkus.platform</groupId>
+        <artifactId>quarkus-bom</artifactId>
+        <version>2.13.3.Final</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
   <dependencies>
     <dependency>
       <groupId>io.opentelemetry</groupId>
@@ -66,6 +78,27 @@
       <version>5.7.1</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>io.rest-assured</groupId>
+      <artifactId>rest-assured</artifactId>
+      <version>4.4.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-junit5</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-resteasy-mutiny</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-config-yaml</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -96,11 +129,18 @@
             <execution>
               <id>default-test</id>
               <configuration>
+                <systemPropertyVariables>
+                  <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                  <maven.home>${maven.home}</maven.home>
+                </systemPropertyVariables>
                 <environmentVariables>
                   <!-- See https://www.w3.org/TR/trace-context/#relationship-between-the-headers -->
                   <TRACEPARENT>00-0af7651916cd43dd8448eb211c80319c-b9c7c989f97918e1-01</TRACEPARENT>
                   <TRACESTATE>rojo=00f067aa0ba902b7,congo=t61rcWkgMzE</TRACESTATE>
                 </environmentVariables>
+<!--                <includes>-->
+<!--                  <include>com.redhat.resilience.otel.TraceparentEnvarCLITest</include>-->
+<!--                </includes>-->
               </configuration>
             </execution>
           </executions>

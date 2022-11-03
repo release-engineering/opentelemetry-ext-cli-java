@@ -30,6 +30,8 @@ import static com.redhat.resilience.otel.OtelContextUtil.extractTraceState;
  * <br/>
  * This <b>ONLY</b> works with single-execution tools; if your software uses a processing loop and runs as a daemon of
  * some sort, <b>DO NOT USE THIS.</b>
+ * <br />
+ * This also uses {@link W3CTraceContextPropagator} to inject trace state into downstream calls.
  * <p>
  * See also: https://github.com/jenkinsci/opentelemetry-plugin/blob/master/docs/job-traces.md#environment-variables-for-trace-context-propagation-and-integrations
  */
@@ -92,7 +94,7 @@ public class EnvarExtractingPropagator
             context = Context.root();
         }
 
-        SpanContext spanContext = extractImpl();
+        SpanContext spanContext = extractFromEnvars();
         if ( !spanContext.isValid() )
         {
             return context;
@@ -101,7 +103,7 @@ public class EnvarExtractingPropagator
         return context.with( Span.wrap( spanContext ) );
     }
 
-    private static <C> SpanContext extractImpl()
+    private static <C> SpanContext extractFromEnvars()
     {
         final Logger logger = LoggerFactory.getLogger( OtelContextUtil.class );
 
@@ -110,7 +112,7 @@ public class EnvarExtractingPropagator
         SpanContext contextFromParent = null;
 
         String traceParentValue = envMap.get( ENVAR_TRACE_PARENT );
-//        System.out.println("Trace parent: " + traceParentValue);
+        System.out.println("Trace parent: " + traceParentValue);
         if ( traceParentValue != null )
         {
             contextFromParent = extractContextFromTraceParent( traceParentValue );
@@ -120,7 +122,7 @@ public class EnvarExtractingPropagator
         {
             String traceId = envMap.get( ENVAR_TRACE_ID );
             String parentSpanId = envMap.get( ENVAR_SPAN_ID );
-//            System.out.println("Trace ID: " + traceId + ", Span ID: " + parentSpanId);
+            System.out.println("Trace ID: " + traceId + ", Span ID: " + parentSpanId);
             if ( traceId != null && !traceId.isEmpty() && parentSpanId != null && !parentSpanId.isEmpty() )
             {
                 contextFromParent = SpanContext.createFromRemoteParent( traceId, parentSpanId, TraceFlags.getDefault(),
@@ -138,7 +140,7 @@ public class EnvarExtractingPropagator
         }
 
         String traceStateValue = envMap.get( ENVAR_TRACE_STATE );
-//        System.out.println("Trace state: " + traceStateValue);
+        System.out.println("Trace state: " + traceStateValue);
         if ( traceStateValue == null || traceStateValue.isEmpty() )
         {
             return contextFromParent;

@@ -9,30 +9,58 @@ This is a specialized Opentelemetry trace context propagator for command-line ap
 
 If your CLI tools call other services, it can be very important to consume this context so you can propagate the trace to those other services.
 
-## Example: Manual Setup
+## Example: Command-Line Interface Usage
 
-This is adapted from: https://opentelemetry.io/docs/instrumentation/java/manual/
+The `OtelCLIHelper` utility class is intended to move the Opentelemetry setup out of your way:
+
+```java
+public static void main(String[] args)
+{
+    OtelCLIHelper.startOtel(
+        "my-service", 
+        OtelCLIHelper.defaultSpanProcessor(
+            OtelCliHelper.defaultSpanExporter("http://localhost:4317")
+        )
+    );
+
+    try
+    {
+        Span.current().setAttribute("input-file", args[0]);
+        // do some cool stuff
+    }
+    finally
+    {
+        OtelCLIHelper.stopOtel();
+    }
+}
+```
+
+If you'd like more control over the setup, you can handle it manually like this:
 
 ```java
 Resource resource = Resource.getDefault()
-  .merge(Resource.create(Attributes.of(ResourceAttributes.SERVICE_NAME, "logical-service-name")));
+                            .merge( Resource.create( Attributes.of( ResourceAttributes.SERVICE_NAME,
+                                                                    serviceName ) ) );
 
-SdkTracerProvider sdkTracerProvider = SdkTracerProvider.builder()
-  .addSpanProcessor(BatchSpanProcessor.builder(OtlpGrpcSpanExporter.builder().build()).build())
-  .setResource(resource)
-  .build();
-
-SdkMeterProvider sdkMeterProvider = SdkMeterProvider.builder()
-  .registerMetricReader(PeriodicMetricReader.builder(OtlpGrpcMetricExporter.builder().build()).build())
-  .setResource(resource)
-  .build();
+SpanExporter exporter = OtlpGrpcSpanExporter.builder().setEndpoint( endpoint ).build();
+SpanProcessor processor = BatchSpanProcessor.builder(exporter).build();
+SdkTracerProvider sdkTracerProvider =
+                SdkTracerProvider.builder().addSpanProcessor( processor ).setResource( resource ).build();
 
 // NOTE the use of EnvarExtractingPropagator here
-OpenTelemetry openTelemetry = OpenTelemetrySdk.builder()
-  .setTracerProvider(sdkTracerProvider)
-  .setMeterProvider(sdkMeterProvider)
-  .setPropagators(ContextPropagators.create(EnvarExtractingPropagator.getInstance()))
-  .buildAndRegisterGlobal();
+OpenTelemetrySdk openTelemetry = OpenTelemetrySdk.builder()
+                                                 .setTracerProvider( sdkTracerProvider )
+                                                 .setPropagators( ContextPropagators.create(
+                                                                 EnvarExtractingPropagator.getInstance() ) )
+                                                 .buildAndRegisterGlobal();
+
+Context parentContext = EnvarExtractingPropagator.getInstance().extract( Context.root(), null, null );
+Span root = GlobalOpenTelemetry.get()
+                               .getTracer( serviceName )
+                               .spanBuilder( "cli-execution" )
+                               .setParent( parentContext )
+                               .startSpan();
+root.makeCurrent();
 ```
 
 ## Example: Quarkus Setup

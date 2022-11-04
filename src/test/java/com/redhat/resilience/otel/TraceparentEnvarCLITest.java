@@ -35,6 +35,9 @@ public class TraceparentEnvarCLITest
     public void otelSetup()
     {
         TestSpanExporter.clear();
+
+        // normally you'd probably call OtelCLIHelper.defaultSpanProcessor() and OtelCLIHelper.defaultSpanExporter()
+        // We have to use a SimpleSpanProcessor and the TestSpanExporter to ensure the span data is recorded immediately
         OtelCLIHelper.startOtel( "traceparent-envar-cli-test", SimpleSpanProcessor.create( new TestSpanExporter() ) );
     }
 
@@ -49,17 +52,12 @@ public class TraceparentEnvarCLITest
     {
         System.out.println( "\n\n" + testInfo.getDisplayName() );
 
-        // Start a child span, just to ensure nesting.
-
-        // regular execution begins...
-
         Span current = Span.current();
         assertNotNull( current );
 
         System.out.println( "Current span: " + current );
 
         assertNotNull( current, "No current span!" );
-        //        assertTrue( current.getSpanContext().isValid() );
 
         // Sample data taken from W3C trace context spec
         assertEquals( TRACE_ID, current.getSpanContext().getTraceId(), "Wrong trace ID" );
@@ -79,6 +77,7 @@ public class TraceparentEnvarCLITest
         List<SpanData> spanData = TestSpanExporter.getSpans();
         assertEquals( 1, spanData.size(), "Incorrect span count!" );
         assertEquals( TRACE_ID, spanData.get( 0 ).getTraceId(), "Incorrect trace ID in span output" );
+        assertEquals( SPAN_ID, spanData.get( 0 ).getParentSpanId(), "Incorrect parent span ID in span output" );
     }
 
 }

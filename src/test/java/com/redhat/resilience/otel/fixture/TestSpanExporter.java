@@ -19,7 +19,7 @@ public class TestSpanExporter implements SpanExporter
     @Override
     public CompletableResultCode export( Collection<SpanData> spans )
     {
-        SPANS.addAll( spans );
+        record( spans );
         return CompletableResultCode.ofSuccess();
     }
 
@@ -35,6 +35,11 @@ public class TestSpanExporter implements SpanExporter
         return flush();
     }
 
+    public static void record( Collection<SpanData> spans )
+    {
+        SPANS.addAll( spans );
+    }
+
     public static void clear()
     {
         SPANS.clear();
@@ -44,4 +49,5 @@ public class TestSpanExporter implements SpanExporter
     {
         return Collections.unmodifiableList( SPANS );
     }
+
 }

@@ -1,6 +1,7 @@
 package com.redhat.resilience.otel;
 
 import com.redhat.resilience.otel.fixture.TestSpanExporter;
+import com.redhat.resilience.otel.internal.EnvarExtractingPropagator;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
@@ -15,7 +16,6 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
@@ -29,42 +29,27 @@ public class TraceparentEnvarCLITest
 {
     private static final String TRACE_ID = "0af7651916cd43dd8448eb211c80319c";
 
-    @BeforeAll
-    public static void staticSetup()
+    private static final String SPAN_ID = "b9c7c989f97918e1";
+
+    @BeforeEach
+    public void otelSetup()
     {
-        Resource resource = Resource.getDefault()
-                                    .merge( Resource.create( Attributes.of( ResourceAttributes.SERVICE_NAME,
-                                                                            "traceparent-envar-test" ) ) );
+        TestSpanExporter.clear();
+        OtelCLIHelper.startOtel( "traceparent-envar-cli-test", SimpleSpanProcessor.create( new TestSpanExporter() ) );
+    }
 
-        SpanProcessor spanProcessor = SimpleSpanProcessor.create( new TestSpanExporter() );
-        SdkTracerProvider sdkTracerProvider = SdkTracerProvider.builder().addSpanProcessor( spanProcessor ).setResource( resource ).build();
-
-        // NOTE the use of EnvarExtractingPropagator here
-        EnvarExtractingPropagator.getInstance();
-        OpenTelemetrySdk openTelemetry = OpenTelemetrySdk.builder()
-                                                         .setTracerProvider( sdkTracerProvider )
-                                                         .setPropagators( ContextPropagators.create(
-                                                                         EnvarExtractingPropagator.getInstance() ) )
-                                                         .buildAndRegisterGlobal();
-
-        //        Context extract = EnvarExtractingPropagator.getInstance().extract( Context.root(), null, null );
-        //        extract.makeCurrent();
+    @AfterEach
+    public void otelTeardown()
+    {
+        OtelCLIHelper.stopOtel();
     }
 
     @Test
     public void createExecutionChildSpan( TestInfo testInfo )
     {
-        System.out.println("\n\n" + testInfo.getDisplayName());
+        System.out.println( "\n\n" + testInfo.getDisplayName() );
 
-        TestSpanExporter.clear();
-
-        Context parentContext = EnvarExtractingPropagator.getInstance().extract( Context.root(), null, null );
-        Span span = GlobalOpenTelemetry.get()
-                                       .getTracer( "traceparent-test" )
-                                       .spanBuilder( "run" )
-                                       .setParent( parentContext )
-                                       .startSpan();
-        span.makeCurrent();
+        // Start a child span, just to ensure nesting.
 
         // regular execution begins...
 
@@ -93,7 +78,7 @@ public class TraceparentEnvarCLITest
 
         List<SpanData> spanData = TestSpanExporter.getSpans();
         assertEquals( 1, spanData.size(), "Incorrect span count!" );
-        assertEquals( TRACE_ID, spanData.get( 0 ).getTraceId(), "Incorrect trace ID in span output");
+        assertEquals( TRACE_ID, spanData.get( 0 ).getTraceId(), "Incorrect trace ID in span output" );
     }
 
 }

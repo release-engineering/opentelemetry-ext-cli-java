@@ -30,6 +30,7 @@
     <maven.compiler.target>11</maven.compiler.target>
 
     <otel.version>1.19.0</otel.version>
+    <otel.semconv.version>${otel.version}-alpha</otel.semconv.version>
   </properties>
 
   <dependencyManagement>
@@ -55,6 +56,11 @@
       <artifactId>opentelemetry-sdk-extension-autoconfigure-spi</artifactId>
       <version>${otel.version}</version>
       <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-semconv</artifactId>
+      <version>${otel.semconv.version}</version>
     </dependency>
     <dependency>
       <groupId>io.opentelemetry</groupId>
@@ -96,7 +102,7 @@
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-config-yaml</artifactId>
+      <artifactId>quarkus-opentelemetry-exporter-otlp</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

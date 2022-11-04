@@ -5,18 +5,32 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 
 import static io.restassured.RestAssured.given;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @QuarkusTest
 @TestProfile( CustomTestProfile.class )
 public class TraceparentEnvarQuarkusTest
 {
+    private static final String TRACE_ID = "0af7651916cd43dd8448eb211c80319c";
+    private static final String SPAN_ID = "b9c7c989f97918e1";
+
     @Test
-    public void test()
+    public void test( TestInfo testInfo )
     {
-        given().when().head( "/test" ).then().statusCode( 200 );
+        System.out.println( testInfo.getDisplayName() );
+
+        given().when().get( "/test" ).then().statusCode( 200 );
         Response response = given().when().get( "/spans" ).thenReturn();
-        System.out.println( response.getBody().print() );
+        String[] traceLines = response.getBody().print().split( "\n" );
+        System.out.println(traceLines.length + " spans");
+
+        for ( String line : traceLines )
+        {
+            String[] parts = line.split( "," );
+            assertEquals( TRACE_ID, parts[0], "Incorrect trace ID!" );
+        }
     }
 }

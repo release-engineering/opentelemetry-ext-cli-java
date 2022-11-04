@@ -1,1 +1,1 @@
-com.redhat.resilience.otel.EnvarExtractingConfigurablePropagator
+com.redhat.resilience.otel.internal.EnvarExtractingConfigurablePropagator

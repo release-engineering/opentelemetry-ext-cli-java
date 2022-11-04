@@ -13,7 +13,6 @@ public class CustomTestProfile implements QuarkusTestProfile
         Map<String, String> overrides = new HashMap<>();
         overrides.put("quarkus.opentelemetry.enabled", "true");
         overrides.put("quarkus.opentelemetry.propagators", "envar");
-        overrides.put("quarkus.opentelemetry.exporters", "test");
 
         return overrides;
     }

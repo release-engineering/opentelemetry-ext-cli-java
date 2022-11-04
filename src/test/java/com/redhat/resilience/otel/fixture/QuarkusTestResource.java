@@ -1,26 +1,37 @@
 package com.redhat.resilience.otel.fixture;
 
-import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.sdk.trace.ReadableSpan;
 
 import javax.ws.rs.GET;
-import javax.ws.rs.HEAD;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
+import java.util.Collections;
 import java.util.List;
 
+@Path("/test")
 public class QuarkusTestResource
 {
-    @Path("/test")
-    @HEAD
-    public Response head()
-    {
-        return Response.ok().build();
-    }
-
-    @Path("/spans")
     @GET
-    public List<SpanData> get()
+    public Response test()
     {
-        return TestSpanExporter.getSpans();
+        Span span = Span.current();
+
+        Span client = GlobalOpenTelemetry.get()
+                                  .getTracer( "test-client" )
+                                  .spanBuilder( "get-test-resource" )
+                                  .setSpanKind( SpanKind.CLIENT )
+                                  .setAttribute( "service.name", "sidecar" )
+                                  .startSpan();
+
+
+        client.end();
+
+        TestSpanExporter.record(
+                        List.of( ( (ReadableSpan) span ).toSpanData(), ( (ReadableSpan) client ).toSpanData() ) );
+
+        return Response.ok().build();
     }
 }

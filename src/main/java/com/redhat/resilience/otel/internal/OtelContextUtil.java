@@ -69,6 +69,9 @@ public final class OtelContextUtil
      * Parse a W3C-compliant traceparent header value, and return a {@link SpanContext} with the details, or else
      * {@link SpanContext#getInvalid()}. <b>NOTE:</b> It's worth realizing that traceparent doesn't HAVE TO come from
      * a HTTP request, if your software doesn't listen for HTTP requests (or has a different use case).
+     *
+     * @param traceparent The traceparent 'header' to extract from...this doesn't have to come from HTTP headers!
+     * @return The SpanContext parsed from the traceparent, or else {@link SpanContext#getInvalid()}
      */
     public static SpanContext extractContextFromTraceParent( String traceparent )
     {
@@ -118,6 +121,9 @@ public final class OtelContextUtil
      * Parse a W3C-compliant tracestate header value, and return a {@link TraceState} with the details, or else
      * {@link TraceState#getDefault()}. <b>NOTE:</b> It's worth realizing that tracestate doesn't HAVE TO come from
      * a HTTP request, if your software doesn't listen for HTTP requests (or has a different use case).
+     *
+     * @param traceStateHeader The string containing tracestate information
+     * @return The {@link TraceState} parsed, or else {@link TraceState#getDefault()}
      */
     public static TraceState extractTraceState( String traceStateHeader )
     {

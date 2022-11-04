@@ -29,6 +29,9 @@ public class OtelCLIHelper
 
     /**
      * Setup a {@link OtlpGrpcSpanExporter} exporter with the given endpoint.
+     *
+     * @param endpoint The gRPC endpoint for sending span data
+     * @return The {@link OtlpGrpcSpanExporter} instance
      */
     public static SpanExporter defaultSpanExporter( String endpoint )
     {
@@ -37,6 +40,9 @@ public class OtelCLIHelper
 
     /**
      * Setup a {@link BatchSpanProcessor} with the supplied {@link SpanExporter}.
+     *
+     * @param exporter The {@link SpanExporter}, which MAY come from {@link OtelCLIHelper#defaultSpanExporter}
+     * @return The {@link BatchSpanProcessor} instance
      */
     public static SpanProcessor defaultSpanProcessor( SpanExporter exporter )
     {
@@ -47,7 +53,7 @@ public class OtelCLIHelper
      * Setup {@link GlobalOpenTelemetry} using the provided service name and span processor (which contains an exporter).
      * This will also ininitialize with the {@link EnvarExtractingPropagator} context propagator, which knows how to set
      * W3C HTTP headers for propagating context downstream, but reads similar fields from {@link System#getenv()}.
-     * <br/>
+     * <p>
      * When the {@link GlobalOpenTelemetry} setup is done, <b>this method will also start a root span</b>, which enables
      * the CLI execution to use {@link Span#current()} to set attributes directly with no further setup required.
      *

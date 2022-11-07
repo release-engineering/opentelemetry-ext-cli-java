@@ -194,6 +194,7 @@
           <configuration>
             <useReleaseProfile>false</useReleaseProfile>
             <arguments>-Prelease</arguments>
+            <tagNameFormat>v@{project.version}</tagNameFormat>
           </configuration>
         </plugin>
         <plugin>

@@ -45,6 +45,7 @@ public class TraceparentEnvarCLITest
     public void otelTeardown()
     {
         OtelCLIHelper.stopOtel();
+        GlobalOpenTelemetry.resetForTest();
     }
 
     @Test

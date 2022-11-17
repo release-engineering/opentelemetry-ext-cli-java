@@ -21,7 +21,7 @@ import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
 
 /**
- * Helper class to make setup / teardown of Opentelemetry tracing simpler for CLI tools.
+ * Helper class to make setup / teardown of OpenTelemetry tracing simpler for CLI tools.
  */
 public class OtelCLIHelper
 {
@@ -62,6 +62,10 @@ public class OtelCLIHelper
      */
     public static void startOtel( String serviceName, SpanProcessor processor )
     {
+        if (spanProcessor != null)
+        {
+            throw new IllegalStateException("startOtel has already been called");
+        }
         spanProcessor = processor;
 
         Resource resource = Resource.getDefault()
@@ -95,6 +99,7 @@ public class OtelCLIHelper
         if ( spanProcessor != null )
         {
             spanProcessor.close();
+            spanProcessor = null;
         }
     }
 }

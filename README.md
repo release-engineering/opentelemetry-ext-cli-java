@@ -1,6 +1,6 @@
 # Introduction
 
-This is a specialized Opentelemetry trace context propagator for command-line applications. It's is especially useful when your CLI tools are used from Jenkins pipelines with the Jenkins Opentelemetry Plugin enabled. This plugin exposes specific environment variables to tool executions:
+This is a specialized OpenTelemetry trace context propagator for command-line applications. It's is especially useful when your CLI tools are used from Jenkins pipelines with the Jenkins OpenTelemetry Plugin enabled. This plugin exposes specific environment variables to tool executions:
 
 * `TRACEPARENT`
 * `TRACESTATE`
@@ -11,15 +11,15 @@ If your CLI tools call other services, it can be very important to consume this 
 
 ## Example: Command-Line Interface Usage
 
-The `OtelCLIHelper` utility class is intended to move the Opentelemetry setup out of your way:
+The `OTelCLIHelper` utility class is intended to move the OpenTelemetry setup out of your way:
 
 ```java
 public static void main(String[] args)
 {
-    OtelCLIHelper.startOtel(
-        "my-service", 
-        OtelCLIHelper.defaultSpanProcessor(
-            OtelCliHelper.defaultSpanExporter("http://localhost:4317")
+    OTelCLIHelper.startOTel(
+        "my-service",
+        OTelCLIHelper.defaultSpanProcessor(
+            OTelCliHelper.defaultSpanExporter("http://localhost:4317")
         )
     );
 
@@ -30,7 +30,7 @@ public static void main(String[] args)
     }
     finally
     {
-        OtelCLIHelper.stopOtel();
+        OTelCLIHelper.stopOTel();
     }
 }
 ```
@@ -55,8 +55,7 @@ OpenTelemetrySdk openTelemetry = OpenTelemetrySdk.builder()
                                                  .buildAndRegisterGlobal();
 
 Context parentContext = EnvarExtractingPropagator.getInstance().extract( Context.root(), null, null );
-Span root = GlobalOpenTelemetry.get()
-                               .getTracer( serviceName )
+Span root = openTelemetry.getTracer( serviceName )
                                .spanBuilder( "cli-execution" )
                                .setParent( parentContext )
                                .startSpan();

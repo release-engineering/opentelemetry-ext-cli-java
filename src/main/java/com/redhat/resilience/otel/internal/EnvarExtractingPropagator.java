@@ -14,14 +14,15 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Map;
 
-import static com.redhat.resilience.otel.internal.OtelContextUtil.extractContextFromTraceParent;
-import static com.redhat.resilience.otel.internal.OtelContextUtil.extractTraceState;
+import static com.redhat.resilience.otel.internal.OTelContextUtil.extractContextFromTraceParent;
+import static com.redhat.resilience.otel.internal.OTelContextUtil.extractTraceState;
 
 /**
  * {@link TextMapPropagator} implementation (for propagating trace context) that consumes environment variables during
@@ -33,8 +34,10 @@ import static com.redhat.resilience.otel.internal.OtelContextUtil.extractTraceSt
  * <p>
  * This also uses {@link W3CTraceContextPropagator} to inject trace state into downstream calls.
  * <p>
- * See also: https://github.com/jenkinsci/opentelemetry-plugin/blob/master/docs/job-traces.md#environment-variables-for-trace-context-propagation-and-integrations
+ * See also:
+ * <a href="https://github.com/jenkinsci/opentelemetry-plugin/blob/master/docs/job-traces.md#environment-variables-for-trace-context-propagation-and-integrations">Jenkins environment variables</a>.
  */
+@Slf4j
 public class EnvarExtractingPropagator
                 implements TextMapPropagator
 {
@@ -47,8 +50,6 @@ public class EnvarExtractingPropagator
     private static final String ENVAR_SPAN_ID = "SPAN_ID";
 
     private static final EnvarExtractingPropagator INSTANCE = new EnvarExtractingPropagator();
-
-    private final Logger logger = LoggerFactory.getLogger( getClass() );
 
     private EnvarExtractingPropagator()
     {
@@ -129,14 +130,12 @@ public class EnvarExtractingPropagator
      */
     private static <C> SpanContext extractFromEnvars()
     {
-        final Logger logger = LoggerFactory.getLogger( OtelContextUtil.class );
-
         Map<String, String> envMap = System.getenv();
 
         SpanContext contextFromParent = null;
 
         String traceParentValue = envMap.get( ENVAR_TRACE_PARENT );
-        logger.info("Trace parent: {}", traceParentValue);
+        log.info("Trace parent: {}", traceParentValue);
         if ( traceParentValue != null )
         {
             contextFromParent = extractContextFromTraceParent( traceParentValue );
@@ -146,7 +145,7 @@ public class EnvarExtractingPropagator
         {
             String traceId = envMap.get( ENVAR_TRACE_ID );
             String parentSpanId = envMap.get( ENVAR_SPAN_ID );
-            logger.debug("Trace ID: {}, Span ID: {}", traceId, parentSpanId);
+            log.debug("Trace ID: {}, Span ID: {}", traceId, parentSpanId);
             if ( traceId != null && !traceId.isEmpty() && parentSpanId != null && !parentSpanId.isEmpty() )
             {
                 contextFromParent = SpanContext.createFromRemoteParent( traceId, parentSpanId, TraceFlags.getDefault(),
@@ -164,7 +163,7 @@ public class EnvarExtractingPropagator
         }
 
         String traceStateValue = envMap.get( ENVAR_TRACE_STATE );
-        logger.debug("Trace state: {}", traceStateValue);
+        log.debug("Trace state: {}", traceStateValue);
         if ( traceStateValue == null || traceStateValue.isEmpty() )
         {
             return contextFromParent;
@@ -178,7 +177,7 @@ public class EnvarExtractingPropagator
         }
         catch ( IllegalArgumentException e )
         {
-            logger.debug( "Unparseable tracestate header. Returning span context without state." );
+            log.debug( "Unparseable tracestate header. Returning span context without state." );
             return contextFromParent;
         }
     }

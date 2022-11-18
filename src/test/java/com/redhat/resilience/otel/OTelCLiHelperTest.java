@@ -11,23 +11,37 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class OTelCLiHelperTest
 {
+    static
+    {
+        System.setProperty( org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "TRACE" );
+    }
+
     @AfterEach
     public void otelTeardown()
     {
-        OtelCLIHelper.stopOtel();
+        OTelCLIHelper.stopOTel();
         GlobalOpenTelemetry.resetForTest();
     }
 
     @Test
     public void verifyDoubleStart()
     {
-        OtelCLIHelper.startOtel( "traceparent-envar-cli-test", SimpleSpanProcessor.create( new TestSpanExporter() ) );
+        OTelCLIHelper.startOTel( "cli-test", SimpleSpanProcessor.create( new TestSpanExporter() ) );
 
         IllegalStateException thrown = assertThrows(
                         IllegalStateException.class,
-                        () -> OtelCLIHelper.startOtel( "traceparent-envar-cli-test", SimpleSpanProcessor.create( new TestSpanExporter() ) )
+                        () -> OTelCLIHelper.startOTel( "traceparent-envar-cli-test",
+                                           SimpleSpanProcessor.create( new TestSpanExporter() ) )
         );
 
-        assertTrue(thrown.getMessage().contains("startOtel has already been called"));
+        assertTrue(thrown.getMessage().contains("startOTel has already been called"));
+    }
+
+    @Test
+    public void verifyDoubleStop()
+    {
+        OTelCLIHelper.startOTel( "cli-test", SimpleSpanProcessor.create( new TestSpanExporter() ) );
+        OTelCLIHelper.stopOTel();
+        OTelCLIHelper.stopOTel();
     }
 }

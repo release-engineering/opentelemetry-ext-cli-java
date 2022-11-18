@@ -24,12 +24,12 @@ import static io.opentelemetry.api.internal.Utils.checkArgument;
 
 /**
  * Rip off of the utility functions from {@link W3CTraceContextPropagator} (version 1.6.0), for parsing
- * traceparent and tracestate headers. These headers are also used by the Jenkins Opentelemetry Plugin, and form a
+ * traceparent and tracestate headers. These headers are also used by the Jenkins OpenTelemetry Plugin, and form a
  * reasonable convention for passing trace context outside of HTTP...so, we'll reuse them.
  *
  * @see W3CTraceContextPropagator
  */
-public final class OtelContextUtil
+public final class OTelContextUtil
 {
     private static final int VERSION_SIZE = 2;
     private static final char TRACEPARENT_DELIMITER = '-';
@@ -63,7 +63,7 @@ public final class OtelContextUtil
         }
     }
 
-    private OtelContextUtil(){}
+    private OTelContextUtil(){}
 
     /**
      * Parse a W3C-compliant traceparent header value, and return a {@link SpanContext} with the details, or else
@@ -75,7 +75,7 @@ public final class OtelContextUtil
      */
     public static SpanContext extractContextFromTraceParent( String traceparent )
     {
-        final Logger logger = LoggerFactory.getLogger( OtelContextUtil.class );
+        final Logger logger = LoggerFactory.getLogger( OTelContextUtil.class );
 
         // TODO(bdrutu): Do we need to verify that version is hex and that
         // for the version the length is the expected one?

@@ -133,8 +133,11 @@ public class OTelCLIHelper
     {
         if ( otelEnabled() )
         {
-            log.debug("Finishing OTEL instrumentation for {}", root);
-            root.end();
+            log.debug("Finishing OpenTelemetry instrumentation for {}", root);
+            if (root != null)
+            {
+                root.end();
+            }
             spanProcessor.close();
             spanProcessor = null;
         }

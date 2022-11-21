@@ -45,12 +45,19 @@
     <maven.compiler.target>11</maven.compiler.target>
 
     <slf4j.version>1.7.36</slf4j.version>
-    <otel.version>1.19.0</otel.version>
-    <otel.semconv.version>${otel.version}-alpha</otel.semconv.version>
+    <otel.version>1.20.1</otel.version>
   </properties>
 
   <dependencyManagement>
     <dependencies>
+      <!-- OpenTelemetry. Alpha BOM includes stable BOM -->
+      <dependency>
+        <groupId>io.opentelemetry</groupId>
+        <artifactId>opentelemetry-bom-alpha</artifactId>
+        <version>${otel.version}-alpha</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
       <dependency>
         <groupId>io.quarkus.platform</groupId>
         <artifactId>quarkus-bom</artifactId>
@@ -65,23 +72,19 @@
     <dependency>
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-api</artifactId>
-      <version>${otel.version}</version>
     </dependency>
     <dependency>
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-sdk-extension-autoconfigure-spi</artifactId>
-      <version>${otel.version}</version>
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-semconv</artifactId>
-      <version>${otel.semconv.version}</version>
     </dependency>
     <dependency>
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-exporter-otlp</artifactId>
-      <version>${otel.version}</version>
     </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>

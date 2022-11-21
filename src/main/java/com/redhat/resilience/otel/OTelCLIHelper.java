@@ -21,7 +21,6 @@ import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.MDC;
 
 /**
  * Helper class to make setup / teardown of OpenTelemetry tracing simpler for CLI tools.

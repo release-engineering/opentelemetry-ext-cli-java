@@ -41,8 +41,8 @@
     <projectEmail>https://github.com/release-engineering/opentelemetry-ext-cli-java</projectEmail>
 
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>11</maven.compiler.source>
-    <maven.compiler.target>11</maven.compiler.target>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
 
     <slf4j.version>1.7.36</slf4j.version>
     <otel.version>1.20.1</otel.version>
@@ -159,8 +159,8 @@
           <artifactId>maven-compiler-plugin</artifactId>
           <version>3.8.0</version>
           <configuration>
-            <source>11</source>
-            <target>11</target>
+            <showWarnings>true</showWarnings>
+            <debug>true</debug>
           </configuration>
         </plugin>
         <plugin>

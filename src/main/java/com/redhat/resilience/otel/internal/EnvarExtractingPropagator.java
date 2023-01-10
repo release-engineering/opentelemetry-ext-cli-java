@@ -16,8 +16,15 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.redhat.resilience.otel.internal.OTelContextUtil.extractContextFromTraceParent;
 import static com.redhat.resilience.otel.internal.OTelContextUtil.extractTraceState;
@@ -132,7 +139,7 @@ public class EnvarExtractingPropagator
 
         SpanContext contextFromParent = null;
 
-        String traceParentValue = envMap.get( ENVAR_TRACE_PARENT );
+        String traceParentValue = parseURL( envMap.get( ENVAR_TRACE_PARENT ) );
         log.info("Trace parent: {}", traceParentValue);
         if ( traceParentValue != null )
         {
@@ -141,8 +148,8 @@ public class EnvarExtractingPropagator
 
         if ( contextFromParent == null )
         {
-            String traceId = envMap.get( ENVAR_TRACE_ID );
-            String parentSpanId = envMap.get( ENVAR_SPAN_ID );
+            String traceId = parseURL( envMap.get( ENVAR_TRACE_ID ) );
+            String parentSpanId = parseURL( envMap.get( ENVAR_SPAN_ID ) );
             log.debug("Trace ID: {}, Span ID: {}", traceId, parentSpanId);
             if ( traceId != null && !traceId.isEmpty() && parentSpanId != null && !parentSpanId.isEmpty() )
             {
@@ -160,7 +167,7 @@ public class EnvarExtractingPropagator
             return contextFromParent;
         }
 
-        String traceStateValue = envMap.get( ENVAR_TRACE_STATE );
+        String traceStateValue = parseURL( envMap.get( ENVAR_TRACE_STATE ) );
         log.debug("Trace state: {}", traceStateValue);
         if ( traceStateValue == null || traceStateValue.isEmpty() )
         {
@@ -178,5 +185,34 @@ public class EnvarExtractingPropagator
             log.debug( "Unparseable tracestate header. Returning span context without state." );
             return contextFromParent;
         }
+    }
+
+    /**
+     * Function that takes a string and, if it starts with file: or http: will resolve the target
+     * value and return that instead.
+     *
+     * @param value the value to parse
+     * @return either the original value or the new resolved value
+     */
+    public static String parseURL (String value)
+    {
+        String result = value;
+
+        if (result != null && (result.startsWith( "http" ) || result.startsWith( "file" )))
+        {
+            try
+            {
+                URLConnection conn = new URL( result ).openConnection();
+                try (BufferedReader reader = new BufferedReader( new InputStreamReader( conn.getInputStream(), StandardCharsets.UTF_8 ) ))
+                {
+                    result = reader.lines().collect( Collectors.joining( System.lineSeparator() ) );
+                }
+            }
+            catch ( IOException e )
+            {
+                throw new RuntimeException( e );
+            }
+        }
+        return result;
     }
 }

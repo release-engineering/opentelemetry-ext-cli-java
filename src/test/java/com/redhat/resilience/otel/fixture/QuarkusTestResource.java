@@ -8,6 +8,7 @@ import io.opentelemetry.sdk.trace.ReadableSpan;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -30,7 +31,7 @@ public class QuarkusTestResource
         client.end();
 
         TestSpanExporter.record(
-                        List.of( ( (ReadableSpan) span ).toSpanData(), ( (ReadableSpan) client ).toSpanData() ) );
+                        Arrays.asList( ( (ReadableSpan) span ).toSpanData(), ( (ReadableSpan) client ).toSpanData() ) );
 
         return Response.ok().build();
     }

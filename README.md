@@ -7,6 +7,9 @@ This is a specialized OpenTelemetry trace context propagator for command-line ap
 * `TRACE_ID`
 * `SPAN_ID`
 
+If the value of those environment variables refer to a `file://` or `http://` URL then that will be automatically 
+resolved to read the value of the referenced variable.
+
 If your CLI tools call other services, it can be very important to consume this context so you can propagate the trace to those other services.
 
 ## Example: Command-Line Interface Usage

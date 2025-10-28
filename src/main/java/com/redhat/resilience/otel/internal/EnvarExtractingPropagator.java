@@ -1,9 +1,32 @@
 /*
- * Copyright Red Hat
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright (C) 2022 Red Hat, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 package com.redhat.resilience.otel.internal;
+
+import static com.redhat.resilience.otel.internal.OTelContextUtil.extractContextFromTraceParent;
+import static com.redhat.resilience.otel.internal.OTelContextUtil.extractTraceState;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
+import java.util.Collection;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -16,19 +39,6 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
-import java.nio.charset.StandardCharsets;
-import java.util.Collection;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import static com.redhat.resilience.otel.internal.OTelContextUtil.extractContextFromTraceParent;
-import static com.redhat.resilience.otel.internal.OTelContextUtil.extractTraceState;
-
 /**
  * {@link TextMapPropagator} implementation (for propagating trace context) that consumes environment variables during
  * extraction, and injects W3C headers for downstream calls. This is intended to be used in command-line tooling,
@@ -40,12 +50,13 @@ import static com.redhat.resilience.otel.internal.OTelContextUtil.extractTraceSt
  * This also uses {@link W3CTraceContextPropagator} to inject trace state into downstream calls.
  * <p>
  * See also:
- * <a href="https://github.com/jenkinsci/opentelemetry-plugin/blob/master/docs/job-traces.md#environment-variables-for-trace-context-propagation-and-integrations">Jenkins environment variables</a>.
+ * <a href=
+ * "https://github.com/jenkinsci/opentelemetry-plugin/blob/master/docs/job-traces.md#environment-variables-for-trace-context-propagation-and-integrations">Jenkins
+ * environment variables</a>.
  */
 @Slf4j
 public class EnvarExtractingPropagator
-                implements TextMapPropagator
-{
+        implements TextMapPropagator {
     private static final String ENVAR_TRACE_PARENT = "TRACEPARENT";
 
     private static final String ENVAR_TRACE_STATE = "TRACESTATE";
@@ -56,16 +67,15 @@ public class EnvarExtractingPropagator
 
     private static final EnvarExtractingPropagator INSTANCE = new EnvarExtractingPropagator();
 
-    private EnvarExtractingPropagator()
-    {
+    private EnvarExtractingPropagator() {
     }
 
     /**
      * Return the singleton instance
+     * 
      * @return the singleton
      */
-    public static EnvarExtractingPropagator getInstance()
-    {
+    public static EnvarExtractingPropagator getInstance() {
         return INSTANCE;
     }
 
@@ -74,8 +84,7 @@ public class EnvarExtractingPropagator
      * it delegates directly to {@link W3CTraceContextPropagator#fields()}
      */
     @Override
-    public Collection<String> fields()
-    {
+    public Collection<String> fields() {
         return W3CTraceContextPropagator.getInstance().fields();
     }
 
@@ -89,9 +98,8 @@ public class EnvarExtractingPropagator
      * @param <C> The instance type
      */
     @Override
-    public <C> void inject( Context context, C c, TextMapSetter<C> textMapSetter )
-    {
-        W3CTraceContextPropagator.getInstance().inject( context, c, textMapSetter );
+    public <C> void inject(Context context, C c, TextMapSetter<C> textMapSetter) {
+        W3CTraceContextPropagator.getInstance().inject(context, c, textMapSetter);
     }
 
     /**
@@ -110,20 +118,17 @@ public class EnvarExtractingPropagator
      * @return The updated trace context object
      */
     @Override
-    public <C> Context extract( Context context, C carrier, TextMapGetter<C> getter )
-    {
-        if ( context == null )
-        {
+    public <C> Context extract(Context context, C carrier, TextMapGetter<C> getter) {
+        if (context == null) {
             context = Context.root();
         }
 
         SpanContext spanContext = extractFromEnvars();
-        if ( !spanContext.isValid() )
-        {
+        if (!spanContext.isValid()) {
             return context;
         }
 
-        return context.with( Span.wrap( spanContext ) );
+        return context.with(Span.wrap(spanContext));
     }
 
     /**
@@ -133,56 +138,51 @@ public class EnvarExtractingPropagator
      * @param <C> The instance type; disregarded here
      * @return The {@link SpanContext} or {@link SpanContext#getInvalid()} one if no environment variables are found.
      */
-    private static <C> SpanContext extractFromEnvars()
-    {
+    private static <C> SpanContext extractFromEnvars() {
         Map<String, String> envMap = System.getenv();
 
         SpanContext contextFromParent = null;
 
-        String traceParentValue = parseURL( envMap.get( ENVAR_TRACE_PARENT ) );
+        String traceParentValue = parseURL(envMap.get(ENVAR_TRACE_PARENT));
         log.info("Trace parent: {}", traceParentValue);
-        if ( traceParentValue != null )
-        {
-            contextFromParent = extractContextFromTraceParent( traceParentValue );
+        if (traceParentValue != null) {
+            contextFromParent = extractContextFromTraceParent(traceParentValue);
         }
 
-        if ( contextFromParent == null )
-        {
-            String traceId = parseURL( envMap.get( ENVAR_TRACE_ID ) );
-            String parentSpanId = parseURL( envMap.get( ENVAR_SPAN_ID ) );
+        if (contextFromParent == null) {
+            String traceId = parseURL(envMap.get(ENVAR_TRACE_ID));
+            String parentSpanId = parseURL(envMap.get(ENVAR_SPAN_ID));
             log.debug("Trace ID: {}, Span ID: {}", traceId, parentSpanId);
-            if ( traceId != null && !traceId.isEmpty() && parentSpanId != null && !parentSpanId.isEmpty() )
-            {
-                contextFromParent = SpanContext.createFromRemoteParent( traceId, parentSpanId, TraceFlags.getDefault(),
-                                                                        TraceState.getDefault() );
+            if (traceId != null && !traceId.isEmpty() && parentSpanId != null && !parentSpanId.isEmpty()) {
+                contextFromParent = SpanContext.createFromRemoteParent(
+                        traceId,
+                        parentSpanId,
+                        TraceFlags.getDefault(),
+                        TraceState.getDefault());
             }
         }
 
-        if ( contextFromParent == null )
-        {
+        if (contextFromParent == null) {
             return SpanContext.getInvalid();
-        }
-        else if ( !contextFromParent.isValid() )
-        {
+        } else if (!contextFromParent.isValid()) {
             return contextFromParent;
         }
 
-        String traceStateValue = parseURL( envMap.get( ENVAR_TRACE_STATE ) );
+        String traceStateValue = parseURL(envMap.get(ENVAR_TRACE_STATE));
         log.debug("Trace state: {}", traceStateValue);
-        if ( traceStateValue == null || traceStateValue.isEmpty() )
-        {
+        if (traceStateValue == null || traceStateValue.isEmpty()) {
             return contextFromParent;
         }
 
-        try
-        {
-            TraceState traceState = extractTraceState( traceStateValue );
-            return SpanContext.createFromRemoteParent( contextFromParent.getTraceId(), contextFromParent.getSpanId(),
-                                                       contextFromParent.getTraceFlags(), traceState );
-        }
-        catch ( IllegalArgumentException e )
-        {
-            log.debug( "Unparseable tracestate header. Returning span context without state." );
+        try {
+            TraceState traceState = extractTraceState(traceStateValue);
+            return SpanContext.createFromRemoteParent(
+                    contextFromParent.getTraceId(),
+                    contextFromParent.getSpanId(),
+                    contextFromParent.getTraceFlags(),
+                    traceState);
+        } catch (IllegalArgumentException e) {
+            log.debug("Unparseable tracestate header. Returning span context without state.");
             return contextFromParent;
         }
     }
@@ -194,23 +194,18 @@ public class EnvarExtractingPropagator
      * @param value the value to parse
      * @return either the original value or the new resolved value
      */
-    public static String parseURL (String value)
-    {
+    public static String parseURL(String value) {
         String result = value;
 
-        if (result != null && (result.startsWith( "http" ) || result.startsWith( "file" )))
-        {
-            try
-            {
-                URLConnection conn = new URL( result ).openConnection();
-                try (BufferedReader reader = new BufferedReader( new InputStreamReader( conn.getInputStream(), StandardCharsets.UTF_8 ) ))
-                {
-                    result = reader.lines().collect( Collectors.joining( System.lineSeparator() ) );
+        if (result != null && (result.startsWith("http") || result.startsWith("file"))) {
+            try {
+                URLConnection conn = new URL(result).openConnection();
+                try (BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+                    result = reader.lines().collect(Collectors.joining(System.lineSeparator()));
                 }
-            }
-            catch ( IOException e )
-            {
-                throw new RuntimeException( e );
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         }
         return result;

@@ -27,7 +27,7 @@
 
   <groupId>com.redhat.resilience.otel</groupId>
   <artifactId>opentelemetry-ext-cli-java</artifactId>
-  <version>1.4.0</version>
+  <version>1.4.1-SNAPSHOT</version>
 
   <name>opentelemetry-ext-cli-java</name>
 
@@ -54,7 +54,7 @@
   <scm>
     <connection>scm:git:https://github.com/release-engineering/opentelemetry-ext-cli-java.git</connection>
     <developerConnection>scm:git:git@github.com:release-engineering/opentelemetry-ext-cli-java.git</developerConnection>
-    <tag>v1.4.0</tag>
+    <tag>HEAD</tag>
     <url>https://github.com/release-engineering/opentelemetry-ext-cli-java</url>
   </scm>
 
@@ -219,7 +219,7 @@
             </sortPom>
           </pom>
           <java>
-            <removeUnusedImports/>
+            <removeUnusedImports />
             <importOrder>
               <file>java-import-order.txt</file>
             </importOrder>

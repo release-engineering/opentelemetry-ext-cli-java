@@ -65,7 +65,18 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <slf4j.version>2.0.17</slf4j.version>
-    <otel.version>1.53.0</otel.version>
+    <!--
+    The Quarkus BOM brings in its own versions of okhttp3 (3.14.9) and okio (1.17.2) and kotlin (1.7.22).
+    This conflicts with the OpenTelemetry versions. We can't update to 1.52/1.53 as it causes major conflicts
+    in Kotlin when building with Gradle (Protocol message contained an invalid tag (zero))
+    1.53 : okhttp 5.1.0 ( okio 3.15.0, kotlin-stdlib 2.2.0)
+    1.52 : okhttp 5.1.0 ( okio 3.15.0, kotlin-stdlib 2.2.0)
+    1.51 : okhttp 4.12.0 ( okio 3.6.0, kotlin-stdlib 1.8.21)
+    1.40 : okhttp 4.12.0 ( okio 3.6.0, kotlin-stdlib 1.8.21)
+    1.29 : okhttp 4.11.0 ( okio 3.2.0, kotlin-stdlib 1.6.20)
+    -->
+    <otel.version>1.51.0</otel.version>
+    <quarkus.version>2.16.12.Final</quarkus.version>
   </properties>
 
   <dependencyManagement>
@@ -79,9 +90,24 @@
         <scope>import</scope>
       </dependency>
       <dependency>
+        <groupId>com.squareup.okhttp3</groupId>
+        <artifactId>okhttp</artifactId>
+        <version>4.12.0</version>
+      </dependency>
+      <dependency>
+        <groupId>com.squareup.okio</groupId>
+        <artifactId>okio</artifactId>
+        <version>3.6.0</version>
+      </dependency>
+      <dependency>
         <groupId>io.opentelemetry</groupId>
         <artifactId>opentelemetry-semconv</artifactId>
         <version>1.29.0-alpha</version>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${slf4j.version}</version>
       </dependency>
       <dependency>
         <groupId>io.quarkus.platform</groupId>
@@ -106,12 +132,6 @@
         <groupId>uk.org.webcompere</groupId>
         <artifactId>system-stubs-core</artifactId>
         <version>2.1.8</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>io.rest-assured</groupId>
-        <artifactId>rest-assured</artifactId>
-        <version>4.4.0</version>
         <scope>test</scope>
       </dependency>
     </dependencies>
@@ -175,7 +195,7 @@
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-opentelemetry-exporter-otlp</artifactId>
+      <artifactId>quarkus-opentelemetry</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -219,7 +239,7 @@
             </sortPom>
           </pom>
           <java>
-            <removeUnusedImports />
+            <removeUnusedImports/>
             <importOrder>
               <file>java-import-order.txt</file>
             </importOrder>
